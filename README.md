@@ -5,9 +5,9 @@ This package exports a series of toolkits that you can use to create pool
 ## Installation
 
 ```bash
-npm install solana-toolkit
+npm install @ladin/solana-kit
 or
-yarn add solana-toolkit
+yarn add @ladin/solana-kit
 ```
 
 ## Example Usage
