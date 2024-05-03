@@ -1,8 +1,7 @@
 {
   "name": "@ladin/solana-kit",
-  "version": "2.1.6",
+  "version": "2.2.2",
   "description": "Solana JavaScript Toolkit API",
-  "main": "lib/cjs/index.js",
   "scripts": {
     "test": "mocha test.js"
   },
@@ -21,8 +20,17 @@
     "createPool",
     "bundle"
   ],
+  "engines": {
+    "node": ">14.0"
+  },
   "author": "Ladin",
   "license": "MIT",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "files": [
+    "lib/",
+    "src/"
+  ],
   "dependencies": {
     "@metaplex-foundation/js": "^0.17.5",
     "@project-serum/serum": "^0.13.65",
@@ -30,16 +38,15 @@
     "@solana-developers/node-helpers": "^1.2.2",
     "@solana/spl-token": "^0.4.0",
     "@solana/spl-token-registry": "^0.2.4574",
-    "@solana/web3.js": "^1.78.5",
-    "socket.io-client": "^4.7.5",
+    "@solana/web3.js": "^1.89.1",
     "bignumber.js": "^9.1.2",
     "bn.js": "^5.2.1",
     "bs58": "^5.0.0",
     "dotenv": "^16.0.3",
     "jito-ts": "^3.0.1",
     "nodemon": "^3.0.1",
-    "ed2curve": "^0.3.0",
-    "tweetnacl": "^1.0.3"
+    "socket.io-client": "^4.7.5",
+    "websocket": "^1.0.34"
   },
   "devDependencies": {
     "@types/big.js": "^6.2.2",
