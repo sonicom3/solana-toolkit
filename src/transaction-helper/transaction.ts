@@ -5,7 +5,7 @@ import {
   TransactionConfirmationStrategy,
   TransactionSignature,
   VersionedTransaction,
-  sendAndConfirmTransaction
+  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { checkTransactions } from "./check_transaction";
 import { SPL_ERROR } from "../global";
@@ -36,7 +36,7 @@ export const sendAndConfirmTransactionWithCheck = async (
 
     const txnId = await connection.confirmTransaction({
       signature: signature,
-      abortSignal: AbortSignal.timeout(90000)
+      abortSignal: AbortSignal.timeout(90000),
     } as TransactionConfirmationStrategy);
 
     if (txnId.value.err) {
@@ -73,9 +73,9 @@ export const sendAndConfirmTransactionsWithCheck = async (
 };
 
 export const signTransaction = (signer: Keypair, txn: VersionedTransaction) => {
-  if (checkTransactions(txn, signer)) {
-    txn.sign([signer]);
-  }
+  // if (checkTransactions(txn, signer)) {
+  txn.sign([signer]);
+  // }
 };
 
 export const signTransactions = (

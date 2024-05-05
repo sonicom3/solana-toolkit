@@ -7,7 +7,7 @@ import {
   Token,
   TokenAmount,
   TxVersion,
-  buildSimpleTransaction
+  buildSimpleTransaction,
 } from "@raydium-io/raydium-sdk";
 import { getWalletAccounts } from "./utility";
 
@@ -40,7 +40,11 @@ export const buyToken = async (
       quote_info.symbol,
       quote_info.name
     );
-    const base_token_amount = new TokenAmount(base_token, base_amount, false);
+    const base_token_amount = new TokenAmount(
+      base_token,
+      base_amount * 0.95,
+      false
+    );
     const quote_token_amount = new TokenAmount(
       quote_token,
       quote_amount,
@@ -57,12 +61,12 @@ export const buyToken = async (
       poolKeys: pool_key,
       userKeys: {
         tokenAccounts: wallet_token_accounts,
-        owner: buyer.publicKey
+        owner: buyer.publicKey,
       },
       amountIn: quote_token_amount,
       amountOut: base_token_amount,
       fixedSide: "in",
-      makeTxVersion: TxVersion.V0
+      makeTxVersion: TxVersion.V0,
     });
 
     const transactions = await buildSimpleTransaction({
@@ -71,7 +75,7 @@ export const buyToken = async (
       payer: buyer.publicKey,
       innerTransactions: innerTransactions,
       addLookupTableInfo: EnvironmentManager.getCacheLTA(),
-      recentBlockhash: (await connection.getLatestBlockhash()).blockhash
+      recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
     });
 
     return { result: SPL_ERROR.E_OK, value: transactions };

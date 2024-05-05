@@ -1,6 +1,6 @@
 {
   "name": "@ladin/solana-kit",
-  "version": "2.2.2",
+  "version": "2.2.15",
   "description": "Solana JavaScript Toolkit API",
   "scripts": {
     "test": "mocha test.js"
@@ -26,7 +26,6 @@
   "author": "Ladin",
   "license": "MIT",
   "main": "./lib/cjs/index.js",
-  "module": "./lib/esm/index.js",
   "files": [
     "lib/",
     "src/"
