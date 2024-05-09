@@ -2,105 +2,98 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  LAMPORTS_PER_SOL,
-  VersionedTransaction,
+  VersionedTransaction
 } from "@solana/web3.js";
 import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { BUNDLE_TRANSACTION, EnvironmentManager, SPL_ERROR } from "./global";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 import * as utils from "./utility";
 import { signTransaction } from "./transaction-helper/transaction";
-import base58 from "bs58";
 
-export const createAndSendBundleTransaction = async (
+export const createAndSendBundle = async (
   connection: Connection,
-  fee: number,
-  bundleTransactions: any,
+  bundleTip: number,
+  transactions: BUNDLE_TRANSACTION[],
   payer: Keypair
-) => {
-  const seacher = searcherClient(
+): Promise<SPL_ERROR> => {
+  const searcher = searcherClient(
     EnvironmentManager.getJitoBlockEngine(),
     EnvironmentManager.getJitoKeypair()
   );
-  const _tipAccount = (await seacher.getTipAccounts())[0];
+
+  const _tipAccount = (await searcher.getTipAccounts())[0];
   const tipAccount = new PublicKey(_tipAccount);
+  const recentBlockhash = (await connection.getLatestBlockhash("finalized"))
+    .blockhash;
+  const bundleTransactions: VersionedTransaction[] = [];
 
-  let transactionsConfirmResult: boolean = false;
-  let breakCheckTransactionStatus: boolean = false;
+  for (let i = 0; i < transactions.length; i++) {
+    transactions[i].txn.message.recentBlockhash = recentBlockhash;
+    signTransaction(transactions[i].signer, transactions[i].txn);
+    bundleTransactions.push(transactions[i].txn);
+  }
+
+  let bundleTx = new Bundle(bundleTransactions, 5);
+
+  bundleTx.addTipTx(payer, bundleTip, tipAccount, recentBlockhash);
+
   try {
-    const recentBlockhash = (await connection.getLatestBlockhash("finalized"))
-      .blockhash;
+    searcher.onBundleResult(
+      (bundleResult) => {
+        if (bundleResult.bundleId === bundleUUID) {
+          if (bundleResult.accepted) {
+            console.log(
+              bundleResult.accepted,
+              `Bundle ${bundleResult.bundleId} accepted in slot ${bundleResult.accepted.slot}`
+            );
+          }
 
-    const bundleTransaction: VersionedTransaction[] = [];
+          if (bundleResult.rejected) {
+            console.log(
+              bundleResult.rejected,
+              `Bundle ${bundleResult.bundleId} rejected:`
+            );
 
-    for (let i = 0; i < bundleTransactions.length; i++) {
-      bundleTransactions[i].txn.message.recentBlockhash = recentBlockhash;
-      signTransaction(bundleTransactions[i].signer, bundleTransactions[i].txn);
-      bundleTransaction.push(bundleTransactions[i].txn);
-    }
-
-    let bundleTx = new Bundle(bundleTransaction, 5);
-    bundleTx.addTipTx(payer, fee, tipAccount, recentBlockhash);
-
-    seacher.onBundleResult(
-      async (bundleResult: any) => {
-        console.log(bundleResult);
-        if (bundleResult.rejected) {
-          try {
+            checked = true;
             if (
-              bundleResult.rejected.simulationFailure.msg.includes(
-                "custom program error"
-              ) ||
-              bundleResult.rejected.simulationFailure.msg.includes(
-                "Error processing Instruction"
+              bundleResult.rejected.droppedBundle?.msg.includes("processed") ||
+              bundleResult.rejected.simulationFailure?.msg?.includes(
+                "processed"
               )
             ) {
-              breakCheckTransactionStatus = true;
-            } else if (
-              bundleResult.rejected.simulationFailure.msg.includes(
-                "This transaction has already been processed"
-              ) ||
-              bundleResult.rejected.droppedBundle.msg.includes(
-                "Bundle partially processed"
-              )
-            ) {
-              transactionsConfirmResult = true;
-              breakCheckTransactionStatus = true;
+              success = true;
+            } else {
+              success = false;
             }
-          } catch (error) {}
+          }
+
+          if (bundleResult.processed) {
+            console.log(`Bundle ${bundleResult.bundleId} processed`);
+            checked = true;
+            success = true;
+          }
         }
       },
       (error) => {
-        console.log("Bundle error:", error);
-        breakCheckTransactionStatus = true;
+        console.error("Bundle Error: ", error);
+        success = false;
+        checked = true;
       }
     );
-    await seacher.sendBundle(bundleTx);
-    setTimeout(() => {
-      breakCheckTransactionStatus = true;
-    }, 20000);
-    const trxHash = base58.encode(
-      bundleTransaction[bundleTransaction.length - 1].signatures[0]
-    );
-    while (!breakCheckTransactionStatus) {
-      await utils.sleep(2000);
-      try {
-        const result = await connection.getSignatureStatus(trxHash, {
-          searchTransactionHistory: true,
-        });
-        if (result && result.value && result.value.confirmationStatus) {
-          transactionsConfirmResult = true;
-          breakCheckTransactionStatus = true;
-        }
-      } catch (error) {
-        transactionsConfirmResult = false;
-        breakCheckTransactionStatus = true;
-      }
+
+    const bundleUUID = await searcher.sendBundle(bundleTx);
+    console.log("bundle id: ", bundleUUID);
+    let checked = false;
+    let success = false;
+
+    while (!checked) {
+      await utils.sleep(1000);
     }
-    return transactionsConfirmResult;
+
+    if (success) return SPL_ERROR.E_OK;
+    else return SPL_ERROR.E_FAIL;
   } catch (error) {
-    console.error("Creating and sending bundle failed...", error);
-    await utils.sleep(10000);
-    return false;
+    console.error("Bundle Error: ", error);
+    return SPL_ERROR.E_FAIL;
   }
 };
