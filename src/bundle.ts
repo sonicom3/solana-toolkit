@@ -37,18 +37,10 @@ export const createAndSendBundleTransaction = async (
       bundleTransactions[i].txn.message.recentBlockhash = recentBlockhash;
       signTransaction(bundleTransactions[i].signer, bundleTransactions[i].txn);
       bundleTransaction.push(bundleTransactions[i].txn);
-      console.log(
-        await connection.simulateTransaction(bundleTransactions[i].txn)
-      );
     }
 
     let bundleTx = new Bundle(bundleTransaction, 5);
-    bundleTx.addTipTx(
-      payer,
-      fee * LAMPORTS_PER_SOL,
-      tipAccount,
-      recentBlockhash
-    );
+    bundleTx.addTipTx(payer, fee, tipAccount, recentBlockhash);
 
     seacher.onBundleResult(
       async (bundleResult: any) => {
@@ -109,6 +101,6 @@ export const createAndSendBundleTransaction = async (
   } catch (error) {
     console.error("Creating and sending bundle failed...", error);
     await utils.sleep(10000);
-    return false;
+    return SPL_ERROR.E_FAIL;
   }
 };
