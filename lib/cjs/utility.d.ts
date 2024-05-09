@@ -1,9 +1,9 @@
-/// <reference types="bn.js" />
 /// <reference types="jito-ts/node_modules/@solana/web3.js" />
+import BN from "bn.js";
 import { Commitment, Connection, PublicKey } from "@solana/web3.js";
 import { Token } from "@raydium-io/raydium-sdk";
 export declare function checkFileExists(filePath: string): Promise<boolean>;
-export declare const xWeiAmount: (amount: number, decimals: number) => any;
+export declare const xWeiAmount: (amount: number, decimals: number) => BN;
 export declare const getConnection: (commitment: Commitment) => Connection;
 export declare const getWalletAccounts: (connection: Connection, wallet: PublicKey) => Promise<{
     pubkey: PublicKey;
@@ -13,11 +13,11 @@ export declare const getWalletAccounts: (connection: Connection, wallet: PublicK
         delegate: PublicKey;
         owner: PublicKey;
         state: number;
-        amount: import("bn.js");
+        amount: BN;
         delegateOption: number;
         isNativeOption: number;
-        isNative: import("bn.js");
-        delegatedAmount: import("bn.js");
+        isNative: BN;
+        delegatedAmount: BN;
         closeAuthorityOption: number;
         closeAuthority: PublicKey;
     };

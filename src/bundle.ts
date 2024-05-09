@@ -101,6 +101,6 @@ export const createAndSendBundleTransaction = async (
   } catch (error) {
     console.error("Creating and sending bundle failed...", error);
     await utils.sleep(10000);
-    return SPL_ERROR.E_FAIL;
+    return false;
   }
 };
